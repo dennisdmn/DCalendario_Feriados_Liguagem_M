@@ -1,0 +1,49 @@
+let
+    DataFinal = #date(2020,12,31),
+    DataInicioAnoAtual = Date.StartOfYear(DataFinal), 
+    DataInicio2AnosAntes = Date.AddYears(DataInicioAnoAtual,-2),
+    Dias = Duration.Days(vDataFinal - DataInicio2AnosAntes),
+    ListaDatas = List.Dates(
+        DataInicio2AnosAntes, 
+        Dias + 1, 
+        #duration(1,0,0,0)
+    ),
+    #"Convertido para Tabela" = Table.FromList(ListaDatas, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Tipo Alterado" = Table.TransformColumnTypes(#"Convertido para Tabela",{{"Column1", type date}}),
+    #"Colunas Renomeadas" = Table.RenameColumns(#"Tipo Alterado",{{"Column1", "Data"}}),
+    #"Personalização Adicionada" = Table.AddColumn(#"Colunas Renomeadas", "DataSerial", each 
+        Number.From(
+            Date.ToText([Data], "yyyyMMdd")
+        ), 
+        Int64.Type
+    ),
+    #"Personalização Adicionada1" = Table.AddColumn(#"Personalização Adicionada", "AnoMes", each Date.ToText([Data], "yyyy-MM"), type text),
+    #"Início do Mês Inserido" = Table.AddColumn(#"Personalização Adicionada1", "InicioMes", each Date.StartOfMonth([Data]), type date),
+    #"Ano Inserido" = Table.AddColumn(#"Início do Mês Inserido", "Ano", each Date.Year([Data]), Int64.Type),
+    #"Trimestre Inserido" = Table.AddColumn(#"Ano Inserido", "TrimestreNum", each Date.QuarterOfYear([Data]), Int64.Type),
+    #"Trimestre Inserido1" = Table.AddColumn(#"Trimestre Inserido", "TrimestreAno", each 
+	Text.From(Date.Year([Data]))
+	&"-"& 
+	Text.From(Date.QuarterOfYear([Data])), 
+
+	type text
+	),
+    #"Nome do Mês Inserido" = Table.AddColumn(#"Trimestre Inserido1", "MesNomeCompleto", each Date.MonthName([Data]), type text),
+    #"Nome do Mês Inserido1" = Table.AddColumn(#"Nome do Mês Inserido", "MesNomeAbreviado", each 
+
+	Text.Start(Text.Upper(Date.MonthName([Data])), 3)
+
+	, type text),
+    #"Nome do Mês Inserido2" = Table.AddColumn(#"Nome do Mês Inserido1", "Nome do Mês", each 
+	Text.From(Date.Year([Data]))
+	&"-"&
+	Text.Start(Text.Upper(Date.MonthName([Data])), 3)
+
+	, type text),
+    #"Dia da Semana Inserido" = Table.AddColumn(#"Nome do Mês Inserido2", "DiaSemanaOrdem", each 
+
+	Date.DayOfWeek([Data], Day.Friday) + 1
+
+	, Int64.Type)
+in
+    #"Dia da Semana Inserido"
