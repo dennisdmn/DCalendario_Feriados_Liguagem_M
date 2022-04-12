@@ -1,0 +1,5 @@
+let
+    // Exemplo.
+    Fonte = 2015
+in
+    Fonte
