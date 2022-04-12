@@ -1,4 +1,0 @@
-let
-    out = 1
-in
-    out
